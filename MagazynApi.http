@@ -1,0 +1,6 @@
+@MagazynApi_HostAddress = http://localhost:5109
+
+GET {{MagazynApi_HostAddress}}/api/przedmioty
+Accept: application/json
+
+###
