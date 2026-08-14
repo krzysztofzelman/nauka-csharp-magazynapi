@@ -81,3 +81,69 @@ Utworzony projekt: `D:\Dane\Projekty\NaukaCSharp\MagazynApi`
 2. `POST /api/przedmioty` — dodawanie przedmiotu (odpowiednik opcji 1 konsoli; dane przyjdą w JSON-ie zamiast z klawiatury)
 3. Potem: `PUT /api/przedmioty/{id}` (opcja 3), `DELETE /api/przedmioty/{id}` (opcja 4), `GET /api/przedmioty/wartosc` (opcja 5)
 4. Na koniec CRUD w całości = to samo co konsola, tylko przez HTTP
+
+---
+
+# Dzień 3 (14.08.2026) — CRUD KOMPLETNY ✅ + start frontendu (Blazor)
+
+## Co zrobiliśmy
+
+### Część 1: API — dokończenie CRUD (wszystko testowane curl-em na prawdziwej bazie)
+
+| Endpoint | Odpowiednik konsoli | Test |
+|---|---|---|
+| `GET /api/przedmioty` (był z dnia 2) | opcja 2 | 200 → JSON z bazy ✅ |
+| `POST /api/przedmioty` | opcja 1 | 200 → Sekator id 9 w bazie ✅ |
+| `PUT /api/przedmioty/{id}` | opcja 3 | 200 → Sekator ilość 3→5 ✅ |
+| `DELETE /api/przedmioty/{id}` | opcja 4 | 200 → Sekator usunięty ✅ |
+
+**Dowód spójności:** Sekator dodany przez API → widoczny w konsoli; Łopata dodana w konsoli → widoczna na stronie. Jedno źródło prawdy.
+
+### Część 2: Frontend — projekt MagazynWeb (Blazor)
+
+- `dotnet new blazor -n MagazynWeb` — pierwsza STRONA zamiast konsoli
+- `Pages/` = odpowiednik `Controllers/` w API; plik `.razor` = strona + adres (`@page "/"`)
+- Strona główna pokazuje **tabelę przedmiotów z prawdziwego API** — klikasz F5 i widzisz magazyn
+- Dodanie przedmiotu w konsoli → F5 na stronie → przedmiot jest! **Dwa ekrany, jedna baza**
+
+## Nowe koncepty (dzień 3)
+
+### API:
+- **`[HttpPost]`** — "odpowiadam na prośbę: dodaj do bazy". Parametr `Przedmiot nowy` = **model binding**: framework sam rozpakowuje JSON z ciała żądania do pudełka `nowy`
+- **`[HttpPut("{id}")]`** — "zmień przedmiot o numerze z adresu": `{id}` w trasie → framework wkłada liczbę z URL do parametru `int id`. Dwa wejścia: `id` (adres) + `nowy` (ciało)
+- **`[HttpDelete("{id}")]`** — "usuń przedmiot o numerze". Tylko `id` — bez ciała, bo do usunięcia wystarczy wiedzieć CO
+- **`WHERE Id = @id`** — kluczowe w UPDATE/DELETE! Bez niego SQL zmieniłby/skasowałby WSZYSTKIE wiersze
+- **`ExecuteNonQuery()`** — "wykonaj bez wyników" dla INSERT/UPDATE/DELETE (SELECT używa `ExecuteReader`)
+- **Zamek na pliku:** build nie może nadpisać pliku działającego serwera (MSB3026/27). Przed buildem: zatrzymaj serwer (Ctrl+C / taskkill)
+
+### Blazor:
+- **`.razor` = HTML + C# w jednym pliku** (HTML — user uczył się kiedyś, pamięta tagi!)
+- **`@`** = przełącznik: "tu się kończy HTML, zaczyna C#"
+- **`@code { }`** — blok C# na dole strony (zmienne, metody)
+- **`@inject HttpClient Http`** — "daj mi telefon z rejestru"; rejestr = `Program.cs`, gdzie dodajemy `builder.Services.AddHttpClient();`
+- **`await Http.GetFromJsonAsync<List<Przedmiot>>("...")`** — "zadzwoń do API i od razu rozpakuj JSON do listy pudełek"; `await` = "czekaj, aż wróci"
+- **`@foreach (var przedmiot in przedmioty)`** — "dla każdego przedmiotu z listy → zrób wiersz tabeli" (pętla jak `while` z konsoli, tylko sama wie, kiedy skończyć)
+- **`@if (x == null)`** — "jak danych nie ma, pokaż Ładowanie..."
+
+## Błędy dnia (każdy = lekcja)
+
+- `Void` → `void` (C# rozróżnia wielkość liter — słowa kluczowe małą)
+- `Przededmiot` → `Przedmiot` (literówka)
+- `[HttPut` → `[HttpPut` (brak "p")
+- `buldier` → `builder` + **przecięcie łańcucha** — kropki łączą wywołania w "pociąg": nie wstawiaj nowej linii w środek pociągu, tylko po jego końcu
+- **PowerShell zjada cudzysłowy** przy `curl -d` z JSON-em → 400 "invalid start of property name". Rozwiązanie: `-d @plik.json` (JSON w pliku)
+
+## Pułapki dnia (ważne!)
+
+- **Korzeń `localhost:5000/` = 404** — to normalne! API mieszka pod `/api/...` ("centrala vs numer wewnętrzny"). ZAWSZE pełny adres.
+- **"To tylko JSON"** — backend = składniki na zapleczu, frontend = danie na talerzu. Tak działa Allegro. Frontend dopiero budujemy!
+- **Build z VS (F5) też blokowany** przez działający serwer — Shift+F5 (zatrzymaj) przed F5
+- **Serwer na 2 portach możliwych:** 5000 (ręczny start) / 5109 (profil VS). Sprawdzić curl-em przed testem.
+
+## Następna sesja (Dzień 4)
+
+1. **Formularz dodawania na stronie** — pola Nazwa/Ilość/Cena + przycisk "Dodaj" → POST do API (prawdziwa aplikacja!)
+2. Przyciski Edytuj/Usuń na stronie (PUT/DELETE z frontendu)
+3. `appsettings.json` — connection string poza kodem (obecnie duplikat w 4 metodach kontrolera!)
+4. Opcjonalnie: `GET /api/przedmioty/wartosc` (opcja 5 z konsoli)
+5. Przenieść notatki do pliku (ta notatka!) — już zrobione 😄
