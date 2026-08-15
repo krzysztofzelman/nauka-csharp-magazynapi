@@ -147,3 +147,67 @@ Utworzony projekt: `D:\Dane\Projekty\NaukaCSharp\MagazynApi`
 3. `appsettings.json` — connection string poza kodem (obecnie duplikat w 4 metodach kontrolera!)
 4. Opcjonalnie: `GET /api/przedmioty/wartosc` (opcja 5 z konsoli)
 5. Przenieść notatki do pliku (ta notatka!) — już zrobione 😄
+
+---
+
+# Dzień 4 (15.08.2026) — Blazor od podstaw (czysta teoria)
+
+## Co się stało
+
+Dzień zaczęliśmy od powtórki `foreach` (nadal nie siedzi — to normalne, wracamy do niego co sesję, małymi krokami). Ale potem padły ważne słowa:
+
+> "po pierwsze to ja jakieś podstawy powinienem poznać z blazor a nie lecisz gdzieś w środku"
+
+Słuszna uwaga! Zamiast wskakiwać w środek (foreach w tabeli), cofnęliśmy się do **samych podstaw Blazora**. Dzień skończył się teorią bez kodu — to był fundament, na którym jutro napiszemy formularz.
+
+## Nowe koncepty (dzień 4)
+
+### 1. Blazor = strony w C#
+- Plik `.razor` = **jedna strona**: góra = wygląd (HTML), dół = logika (C# w `@code { }`)
+- `@` = znak graniczny: "tu wchodzi C# do HTML-a"
+- **C# liczy, HTML pokazuje**
+
+### 2. Adres (URL) — fundament
+- Adres = **do kogo** (`localhost:5008`) + **o co** (`/`)
+- `http://` = protokół (język stron), `localhost` = ten komputer, `:port` = numer drzwi programu
+- Port to **konfiguracja, nie default C#** — mieszka w `Properties/launchSettings.json`:
+  - MagazynWeb = `5008`
+  - MagazynApi z VS = `5109`, startowany ręcznie = `5000`
+- `https` = drzwi z kłódką (szyfrowane); `;` w launchSettings = "i" (program słucha na obu naraz)
+
+### 3. `@page "/"` — wizytówka strony
+- Każda strona `.razor` ma swój adres: `@page "/"` = "kto poprosi o `/` (strona główna), dostaje TĘ stronę"
+- Plik zna tylko SWOJĄ część adresu (numer wewnętrzny) — reszta (centrala = `localhost:port`) siedzi w `launchSettings.json`
+
+### 4. `@code { }` — słowo po słowie
+```csharp
+private List<Przedmiot>? przedmioty;
+// private = "tylko dla strony"
+// List<Przedmiot> = lista przedmiotów (znane z konsoli: List<Item>)
+// ? = "albo lista, albo nic" (na start półka pusta)
+
+protected override async Task OnInitializedAsync()
+// "gdy strona się otworzy" (OnInitialized = zainicjowana)
+// async = "ta metoda może czekać", Task = obietnica, że skończy
+
+{
+    przedmioty = await Http.GetFromJsonAsync<List<Przedmiot>>("http://localhost:5000/api/przedmioty");
+    // await = "czekaj, aż..." (jak na paczkę)
+    // Http = telefon do API (dostajesz przez @inject na górze pliku)
+    // GetFromJsonAsync = "zapytaj API i zamień JSON na listę przedmiotów"
+}
+```
+Całość: **strona się otwiera → dzwoni do API → wkłada dane na półkę → HTML rysuje tabelę**
+
+## Pułapki dnia
+
+- `localhost:5000` to **NIE** "default dla C#/.NET" — to adres, który program dostaje przy starcie (z konfiguracji)
+- Porównanie `@code` do klasy `Enemy` **nie trafiło** (za bardzo odjeżdżało od sedna) — zamiast tego: "kawałek C# przyklejony do strony"
+- Notatnik jako miejsce ćwiczeń — odrzucone ("nie będę klepał w notatniku") — ćwiczymy prosto w kodzie
+
+## Następna sesja (Dzień 5) — PISZEMY KOD! 💪
+
+1. **Formularz dodawania na stronie** — pola Nazwa/Ilość/Cena + przycisk "Dodaj" → POST do API (prawdziwa aplikacja!)
+2. Przyciski Edytuj/Usuń (PUT/DELETE z frontendu)
+3. `appsettings.json` — connection string poza kodem
+4. Wracamy do `foreach` — małymi krokami, na własnym kodzie
