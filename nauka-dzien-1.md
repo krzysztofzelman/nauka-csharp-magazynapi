@@ -199,6 +199,12 @@ protected override async Task OnInitializedAsync()
 ```
 Całość: **strona się otwiera → dzwoni do API → wkłada dane na półkę → HTML rysuje tabelę**
 
+### 5. `var` — skrót od "variable" (zmienna)
+- `var` = "zmienna, typ zgadnij za mnie" — C# sam ustala typ, patrząc na to, co jest po prawej
+- W kodzie: `@foreach (var przedmiot in przedmioty)` — półka `przedmioty` trzyma `Przedmiot`, więc `przedmiot` JEST typu `Przedmiot`
+- `var przedmiot` = to samo, co napisanie `Przedmiot przedmiot` (tylko mniej pisania)
+- `var` to NIE "typ dowolny" — zmienna zawsze ma konkretny typ, tylko ty go nie wypisujesz
+
 ## Pułapki dnia
 
 - `localhost:5000` to **NIE** "default dla C#/.NET" — to adres, który program dostaje przy starcie (z konfiguracji)
