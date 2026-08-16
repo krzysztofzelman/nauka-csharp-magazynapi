@@ -217,3 +217,79 @@ Całość: **strona się otwiera → dzwoni do API → wkłada dane na półkę 
 2. Przyciski Edytuj/Usuń (PUT/DELETE z frontendu)
 3. `appsettings.json` — connection string poza kodem
 4. Wracamy do `foreach` — małymi krokami, na własnym kodzie
+
+---
+
+# Dzień 5 (16.08.2026) — FORMULARZ DODAWANIA DZIAŁA ✅ (prawdziwa aplikacja!)
+
+## Co zrobiliśmy
+
+1. **Powtórka dnia 4 (2/2 z pamięci!)** 🎉 — porty (5008/7052 w `launchSettings.json`) i @ (granica C#) — wczorajsze słabe punkty dziś poszły gładko
+2. **Formularz dodawania na stronie** — 3 pola + niebieski przycisk "Dodaj" → nowy przedmiot w bazie **kliknięciem w przeglądarce**
+3. **TEST NA ŻYWO ✅** — wpisane "Test z formularza" (2×99) → curl pokazał `id 12` w prawdziwej bazie. Pełne koło zamknięte:
+
+```
+przeglądarka (wpisujesz + klik)
+  → @bind łapie wartości do zmiennych
+  → @onclick woła metodę Dodaj()
+  → Http.PostAsJsonAsync wysyła pudełko do API
+  → API robi INSERT do SQLite (opcja 1 konsoli!)
+  → odświeżenie listy → nowy wiersz w tabeli
+```
+
+**Dwa ekrany, jedna baza — teraz z obu stron:** dodawanie działało już z konsoli i z curl, dziś po raz pierwszy kliknięciem. To już "prawdziwa aplikacja", nie wypluty JSON.
+
+## Nowe koncepty (dzień 5)
+
+### 1. `@rendermode InteractiveServer` — przełącznik interaktywności
+- Bez niego strona jest **statyczna** (jak gazeta — przeczytasz i koniec): pokazuje dane, ale nie reaguje na kliknięcia
+- Z nim strona dostaje linię telefoniczną do serwera i **reaguje na kliknięcia** (a formularz to przecież kliknięcia)
+- 1 linijka pod `@page "/"`
+
+### 2. `@bind` — klej pole ↔ zmienna (w DWIE strony)
+- `@bind="nazwa"` = wpisujesz "Młotek" w pole → zmienna `nazwa` staje się "Młotek"
+- (i odwrotnie: jak zmienna się zmieni, pole pokaże nową wartość)
+- Jak `Console.ReadLine()` z konsoli, tylko na żywo przy każdym stuknięciu klawisza
+- `placeholder` = szara podpowiedź w polu (kosmetyka, znika przy pisaniu)
+
+### 3. `@onclick` — zdarzenie
+- `@onclick="Dodaj"` = "jak ktoś kliknie przycisk, wywołaj metodę `Dodaj`"
+- Jak Enter w konsoli, tylko kliknięcie myszką
+- `btn btn-primary` = klasy Bootstrapa (styl): `btn` = kształt przycisku, `btn-primary` = niebieski kolor
+
+### 4. `Http.PostAsJsonAsync(adres, pudełko)` — wysyłka POST
+- `new Przedmiot { Nazwa = nazwa, Ilosc = ilosc, Cena = cena }` = składanie pudełka z pól (obiekt = egzemplarz!)
+- `PostAsJsonAsync` = "wyślij pudełko do API" — ta sama operacja co opcja 1 konsoli, tylko pudełko jedzie z przeglądarki
+- Potem odświeżenie: `GetFromJsonAsync` jeszcze raz, żeby nowy wiersz od razu był w tabeli
+
+## Błędy dnia (każdy = lekcja)
+
+- **Zmienne wpisane POZA `@code`** (między HTML-em) — cały C# mieszka w kuchni `@code { }`, nie na wystawie. Bez tego strona się nie skompiluje
+- **`<button>` wpadł do `@code`** — HTML nie może mieszkać w kuchni C# (odwrotna strona tego samego błędu)
+- **Jedna zmienna, dwie nazwy** — `var nowyPrzedmiot = ...` a potem wysyłka `nowy` → zmienna `nowy` nie istnieje → błąd. Nazwa zmiennej musi być spójna w całej metodzie (dobre: user sam nadał bardziej opisową nazwę `nowyPrzedmiot`!)
+- **Brakująca klamra `}`** na końcu `@code` — każdy blok otwarty `{` musi się domknąć `}`
+
+**Wniosek ogólny:** "pogmatwane" to zwykle nie błąd logiki, tylko 1–2 linijki w złym miejscu. Blazor jest wybredny co do miejsca: HTML na wystawie, C# w kuchni.
+
+## Rozróżnienie: Razor vs Blazor (pytanie usera)
+
+- **Razor = składnia** (sposób pisania HTML+C# w jednym pliku; rozumie `@`; plik `.razor`)
+- **Blazor = cały framework** (strony, komponenty, kliknięcia, Http...); Blazor UŻYWA Razora do rysowania
+- Analogia: **Razor = silnik, Blazor = cały samochód**
+
+## W toku (przerwane na prośbę usera — git + notatki najpierw)
+
+**Przycisk Usuń** — kod przygotowany, do wpisania:
+- `<th>Akcje</th>` — nowa kolumna w tabeli
+- `<button class="btn btn-danger btn-sm" @onclick="() => Usun(przedmiot.Id)">Usuń</button>` — w każdym wierszu
+  - **NOWY KONCEPT: `() =>` (strzałka)** — "gdy klikniesz, WTEDY wywołaj `Usun` z id TEGO wiersza". Bez strzałki Blazor wywołałby metodę od razu przy rysowaniu strony!
+- `private async Task Usun(int id)` + `Http.DeleteAsync($"http://localhost:5000/api/przedmioty/{id}")` + odświeżenie listy
+  - `$".../{id}"` = interpolacja (znana z konsoli) — wstaw id w adres → DELETE jak opcja 4
+
+## Następna sesja (Dzień 6)
+
+1. **Przycisk Usuń** (kod gotowy powyżej — do wpisania, weryfikacja na żywo)
+2. Edytuj przedmiot (PUT z frontendu — więcej roboty)
+3. `appsettings.json` — connection string poza kodem
+4. Wracamy do `foreach` — małymi krokami, na własnym kodzie
+5. Serwery do testów: API 5000, strona 5008 (odpalać w tle)
