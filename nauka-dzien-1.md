@@ -277,19 +277,18 @@ przeglądarka (wpisujesz + klik)
 - **Blazor = cały framework** (strony, komponenty, kliknięcia, Http...); Blazor UŻYWA Razora do rysowania
 - Analogia: **Razor = silnik, Blazor = cały samochód**
 
-## W toku (przerwane na prośbę usera — git + notatki najpierw)
+## Przycisk Usuń — ZROBIONE ✅ (ta sama sesja)
 
-**Przycisk Usuń** — kod przygotowany, do wpisania:
-- `<th>Akcje</th>` — nowa kolumna w tabeli
-- `<button class="btn btn-danger btn-sm" @onclick="() => Usun(przedmiot.Id)">Usuń</button>` — w każdym wierszu
-  - **NOWY KONCEPT: `() =>` (strzałka)** — "gdy klikniesz, WTEDY wywołaj `Usun` z id TEGO wiersza". Bez strzałki Blazor wywołałby metodę od razu przy rysowaniu strony!
-- `private async Task Usun(int id)` + `Http.DeleteAsync($"http://localhost:5000/api/przedmioty/{id}")` + odświeżenie listy
-  - `$".../{id}"` = interpolacja (znana z konsoli) — wstaw id w adres → DELETE jak opcja 4
+User wpisał kod **sam, z notatek** (własny wariant: `@onclick="@(() => Usun(przedmiot.Id))"` — dodatkowe `@` przed nawiasem też działa, jest zbędne). Build OK (0 błędów). **TEST NA ŻYWO ✅:** klik w Usuń przy "Test z formularza" (id 12) → wiersz zniknął z tabeli, curl potwierdził brak id 12 w bazie. Koło: klik → `() =>` przekazuje id → `Usun(id)` → `Http.DeleteAsync(".../{id}")` → API robi `DELETE WHERE Id` (opcja 4) → odświeżenie listy.
+
+- `<th>Akcje</th>` — nowa kolumna
+- `<button class="btn btn-danger" @onclick="() => Usun(przedmiot.Id)">Usuń</button>` — w każdym wierszu
+  - **`() =>` (strzałka/lambda)** = "gdy klikniesz, WTEDY wywołaj metodę z argumentem" — bez niej Blazor wywołałby od razu przy rysowaniu strony
+- `private async Task Usun(int id)` — parametr z adresu; `Http.DeleteAsync($".../{id}")` (interpolacja znana z konsoli)
 
 ## Następna sesja (Dzień 6)
 
-1. **Przycisk Usuń** (kod gotowy powyżej — do wpisania, weryfikacja na żywo)
-2. Edytuj przedmiot (PUT z frontendu — więcej roboty)
-3. `appsettings.json` — connection string poza kodem
-4. Wracamy do `foreach` — małymi krokami, na własnym kodzie
-5. Serwery do testów: API 5000, strona 5008 (odpalać w tle)
+1. **Edytuj przedmiot** (PUT z frontendu — więcej roboty: wypełnienie pól danymi wiersza + PUT)
+2. `appsettings.json` — connection string poza kodem (obecnie duplikat w metodach kontrolera)
+3. Wracamy do `foreach` — małymi krokami, na własnym kodzie
+4. Serwery do testów: API 5000, strona 5008 (odpalać w tle)
