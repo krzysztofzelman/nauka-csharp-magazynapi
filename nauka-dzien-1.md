@@ -286,9 +286,105 @@ User wpisał kod **sam, z notatek** (własny wariant: `@onclick="@(() => Usun(pr
   - **`() =>` (strzałka/lambda)** = "gdy klikniesz, WTEDY wywołaj metodę z argumentem" — bez niej Blazor wywołałby od razu przy rysowaniu strony
 - `private async Task Usun(int id)` — parametr z adresu; `Http.DeleteAsync($".../{id}")` (interpolacja znana z konsoli)
 
-## Następna sesja (Dzień 6)
+---
 
-1. **Edytuj przedmiot** (PUT z frontendu — więcej roboty: wypełnienie pól danymi wiersza + PUT)
-2. `appsettings.json` — connection string poza kodem (obecnie duplikat w metodach kontrolera)
-3. Wracamy do `foreach` — małymi krokami, na własnym kodzie
-4. Serwery do testów: API 5000, strona 5008 (odpalać w tle)
+# Dzień 6 (16.08.2026, wieczór) — PRZYCISK EDYTUJ DZIAŁA ✅ (CRUD KOMPLETNY z przeglądarki!)
+
+## Co zrobiliśmy
+
+1. **Przycisk Edytuj w wierszu** — klik → formularz **wypełnia się danymi wiersza** (w tym cała magia `@bind` w DWIE strony!)
+2. **Zielony "Zapisz"** — tryb edycji: zamiast "Dodaj" przycisk robi się zielony, a metoda wysyła **PUT** zamiast POST
+3. **TEST NA ŻYWO ✅** — Kosiarka: Edytuj → Ilość 5 → 6 → Zapisz → tabela odświeżona, nowa wartość w bazie
+
+**CRUD z przeglądarki zamknięty:** Dodaj ✅ (dzień 5), Usuń ✅ (dzień 5), **Edytuj ✅ (dziś)**. Cały magazyn obsługiwany kliknięciami — prawdziwa aplikacja.
+
+## Nowe koncepty (dzień 6)
+
+### 1. `edytowanyId` — zmienna-pamięć
+- `private int edytowanyId = 0;` — zapamiętuje, **który wiersz właśnie edytujemy**
+- `0` = żaden (tryb dodawania); baza numeruje id od 1, więc 0 to bezpieczny znak "brak edycji"
+- Po zapisaniu zmian wraca do 0 (przycisk znów "Dodaj")
+
+### 2. `@bind` działa w DWIE strony
+- Do tej pory znaliśmy: wpisujesz w pole → zmienna
+- Dziś odwrotnie: `nazwa = przedmiot.Nazwa;` → **pole samo pokazuje nową wartość**
+- To dlatego klik Edytuj "wypełnia" formularz — nie ma żadnego specjalnego kodu do tego, tylko przypisanie do zmiennej!
+
+### 3. Wzorzec "szukanie po liście": `foreach` + `if`
+```csharp
+foreach (var przedmiot in przedmioty)   // dla każdego wiersza
+{
+    if (przedmiot.Id == id)             // jeśli to ten kliknięty
+    {
+        nazwa = przedmiot.Nazwa;        // wypełnij formularz
+        ilosc = przedmiot.Ilosc;
+        cena = przedmiot.Cena;
+        edytowanyId = id;               // zapamiętaj, który edytujemy
+    }
+}
+```
+Zarazem **powtórka foreach** (słaby punkt) — tu foreach robi coś nowego: SZUKA, nie tylko wyświetla.
+
+### 4. `PutAsJsonAsync` — bliźniak `PostAsJsonAsync`
+- Różnica tylko w adresie: POST idzie na listę (`/api/przedmioty`), PUT na konkretny wiersz (`/api/przedmioty/{edytowanyId}` — interpolacja znana z konsoli)
+- w API to ta sama opcja 3 konsoli: `UPDATE ... WHERE Id = @id`
+
+### 5. `@if` na wystawie — przycisk zmienia się w zależności od trybu
+```razor
+@if (edytowanyId == 0)
+{
+    <button class="btn btn-primary" @onclick="Dodaj">Dodaj</button>
+}
+else
+{
+    <button class="btn btn-success" @onclick="Dodaj">Zapisz</button>
+}
+```
+- `@if` znamy już z tabeli (ładowanie) — tu robi coś nowego: wybiera WARIANT przycisku
+- zawsze woła tę samą metodę `Dodaj` — to ona decyduje wewnątrz
+
+### 6. Gdzie stoją przyciski = skąd biorą dane
+- **Dodaj** stoi przy polach, bo czyta **pola** (3 zmienne przez `@bind`) — tworzy nowy przedmiot, tabeli nie potrzebuje
+- **Edytuj/Usuń** stoją w wierszach, bo potrzebują `przedmiot.Id` — a zmienna `przedmiot` istnieje TYLKO wewnątrz `@foreach`. Poza pętlą nie da się powiedzieć, KTÓRY wiersz
+- Analogia zakupów: "dodaj do listy" u góry kartki, "skreśl tę pozycję" przy każdej pozycji
+
+### 7. Metoda Dodaj — jedna metoda, dwie ścieżki (if/else)
+```csharp
+private async Task Dodaj()
+{
+    if (edytowanyId == 0)      // pytanie: czy edytujemy?
+    {
+        // NIE → POST (dodaj nowy — jak wczoraj)
+        var nowyPrzedmiot = new Przedmiot { Nazwa = nazwa, Ilosc = ilosc, Cena = cena };
+        await Http.PostAsJsonAsync("http://localhost:5000/api/przedmioty", nowyPrzedmiot);
+    }
+    else                       // TAK → PUT (zapisz zmiany)
+    {
+        var edytowany = new Przedmiot { Nazwa = nazwa, Ilosc = ilosc, Cena = cena };
+        await Http.PutAsJsonAsync($"http://localhost:5000/api/przedmioty/{edytowanyId}", edytowany);
+        edytowanyId = 0;       // koniec edycji → tryb dodawania
+    }
+    przedmioty = await Http.GetFromJsonAsync<List<Przedmiot>>("http://localhost:5000/api/przedmioty"); // odświeżenie
+}
+```
+- Logika = `if/else`, mocny punkt usera
+- Oba kawałki składają to samo pudełko — różni się tylko adres wysyłki
+
+## Błędy dnia (lekcje)
+
+- **User napisał własny wariant metody (dobrze!)** — logika poprawna (odwrócił `if` na `!= 0` → PUT — w pełni równoważne), ale posypały się literówki: brak `@` przed `if` na wystawie, `}` zamiast `{`, **dwie metody** (`Dodaj` i `dodaj` małą literą — w C# wielkość liter = inne nazwy!), brak `{` po sygnaturze, `varedytowany` (brak spacji), `nazwa = nazwa. Ilosc` (kropka zamiast `;`), adres PUT **bez `{edytowanyId}`** (PUT musi celować w wiersz!), brak `;` na końcu
+- **User przytłoczony** ("za dużo napierdolone, nie ogarniam") → delegował fix asystentowi — poprawione 3 edytami: przycisk, metoda, usunięcie duplikatu metody
+- `viud` → `void` (literówka, ta sama lekcja co `Void` w Dzien 3)
+- **Ostrzeżenie CS8602** na `foreach (... in przedmioty)` — kompilator marudzi, że lista "może być null". Nieszkodliwe: przycisk istnieje tylko gdy tabela widoczna = lista na pewno załadowana. Zostawione.
+
+## Proces dnia
+
+- Oba serwery odpalane w tle z poziomu asystenta: API (`dotnet MagazynApi.dll` z bin → port 5000), strona (`dotnet run --launch-profile http` → port 5008)
+- Przed buildem ZATRZYMAĆ serwer strony (blokada DLL) — asystent robi task_stop, build, start od nowa
+- Testy na żywo w przeglądarce na **http://localhost:5008**
+
+## Następna sesja (Dzień 7)
+
+1. `appsettings.json` — connection string poza kodem (obecnie duplikat w metodach kontrolera: GET/POST/PUT/DELETE)
+2. Powtórka `foreach` — teraz jest idealny przykład w EDYTUJ: wzorzec "szukanie po liście" (foreach + if)
+3. Serwery do testów: API 5000, strona 5008 (odpalać w tle)
