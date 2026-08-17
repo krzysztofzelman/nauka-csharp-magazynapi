@@ -383,8 +383,74 @@ private async Task Dodaj()
 - Przed buildem ZATRZYMAĆ serwer strony (blokada DLL) — asystent robi task_stop, build, start od nowa
 - Testy na żywo w przeglądarce na **http://localhost:5008**
 
-## Następna sesja (Dzień 7)
+---
 
-1. `appsettings.json` — connection string poza kodem (obecnie duplikat w metodach kontrolera: GET/POST/PUT/DELETE)
-2. Powtórka `foreach` — teraz jest idealny przykład w EDYTUJ: wzorzec "szukanie po liście" (foreach + if)
-3. Serwery do testów: API 5000, strona 5008 (odpalać w tle)
+# Dzień 7 (17.08.2026) — tłumaczenie Home.razor linia po linii + 2 NOWE FUNKCJE
+
+## NOWE FUNKCJE (dopisane pod koniec dnia — bounce-back po przytłoczeniu!)
+
+User po tłumaczeniu powiedział "chcę dopisać coś do kodu" → wybrał **"Wartość magazynu na dole"**, potem sam zaproponował drugą: **"Liczba sztuk"**.
+
+**WZORZEC "4 KLOCKI" (nauka: nowy wariant foreach = SUMOWANIE):**
+
+| Klocek | Kod | Rola |
+|---|---|---|
+| Pudełko | `private decimal wartoscMagazynu;` / `private int iloscSztuk;` | szuflada na wynik |
+| Licznik | `ObliczWartosc()` / `ObliczIlosc()` — foreach + `= + ` | pracownik dokłada do szuflady |
+| Włącznik | `ObliczWartosc();` + `ObliczIlosc();` po KAŻDYM odświeżeniu (3×) | "policz!" |
+| Witryna | `<p>Wartość magazynu: @wartoscMagazynu zł</p>` | pokazuje szufladę |
+
+- `ObliczIlosc()` = bliźniak `ObliczWartosc()` — tylko `+ przedmiot.Ilosc` zamiast `* przedmiot.Cena`
+- **Akumulator:** `wartoscMagazynu = wartoscMagazynu + ...` — pudełko rośnie; **`= 0` na starcie** (bez tego sumowanie dokładałoby do starej sumy!)
+- Włącznik stoi w 3 miejscach = tam, gdzie jest `przedmioty = await GetFromJsonAsync(...)` (start strony, Dodaj, Usun) — "pobierz świeżą listę → policz"
+- Włącznik = "() = spust 🔫": metoda bez `()` tylko istnieje, z `()` wykonuje się
+- `var` = "C# sam zgadnij typ" (po prawej stronie); przy pustych pudełkach typ trzeba podać jawnie
+- `private` ≠ szyfrowanie! = "tylko dla nas w tym pliku"
+
+**Błędy usera (typowe):** `on` zamiast `in` (foreach), spacja w nazwie (`ilosc sztuk`), mała litera właściwości (`przedmiot.ilosc` vs `Ilosc`), wielkość liter (`iloscsztuk` vs `iloscSztuk` — C# rozróżnia!), **2× wklejony CAŁY blok zamiast jednej linijki** (sierocy `{ }` — build CS1520) → delegacja fixu asystentowi (wzorzec z Dnia 6)
+
+**TEST:** dodawanie/edycja/usuwanie → obie sumy przeliczają się na żywo ✅ (dowód: 2 Łopaty w bazie → po Usuń jednej sumy spadły)
+
+## Co zrobiliśmy
+
+Cały `MagazynWeb\Components\Pages\Home.razor` wytłumaczony linia po linii. **Mapa pliku:** 2 części — HTML (co widać) + `@code` (logika C#). Łączą je `@bind` i `@onclick`.
+
+**Cały plik = 4 narzędzia w kółko:**
+
+| Narzędzie | Co robi |
+|---|---|
+| `@bind` | most pole ↔ zmienna (w obie strony) |
+| `@if` | pokaż to ALBO tamto (Ładowanie/tabela, Dodaj/Zapisz) |
+| `@foreach` | powtórz wiersz dla każdego przedmiotu |
+| `@onclick` | klik → metoda C# |
+
+**Metody:** `OnInitializedAsync` = start strony (pobierz listę), `Dodaj()` = POST albo PUT + odświeżenie, `Usun()` = DELETE + odświeżenie, `Edytuj()` = szukanie po liście (foreach+if).
+
+## Trudny moment 1: sentynek `edytowanyId == 0` (3 podejścia!)
+
+1. **"Po co to pisać? 0 = nic nie robi"** — user czytał `if` jak polecenie dla SIEBIE. Odblokowane: `if` to pytanie, które **program zadaje sobie**; program nie ma oczu — czyta zmienne.
+2. **"To kłamstwo, bo każdy wiersz ma ID"** — mylił ID wierszy ze zmienną. Odblokowane: 2 światy — ID wierszy (1, 5, 8...) vs zmienna startująca pusto. **0 = symbol "nic", nie numer wiersza** — a obserwacja usera ("zero nie pasuje") jest DOWODEM, że 0 jest bezpieczne jako "pusto".
+3. **"Skoro nic nie robię, to wiadomo, że 0"** — zgadza się! I właśnie to `if` sprawdza. Program nie zgaduje — czyta zmienną.
+
+**Werdykt:** "nooo powiedzmy... 0, bo to tak jest" — konwencji sam by nie wydedukował. **Lekcja: konwencje (0 = pusto) podawać WPROST jako umowę ("czerwone światło = stój"), nie liczyć na dedukcję.** Analogia, która zadziałała: karteczka w kieszeni (pusta = dodaj, z numerem 5 = popraw przedmiot 5).
+
+## Trudny moment 2: `if (przedmiot.Id == id)`
+
+"To jakby kolumna i wiersz to to samo" → dwie RÓŻNE liczby o podobnych nazwach:
+- `id` (małe) = numer z **kliknięcia** (lambda podchwyciła z wiersza) — "czego szukam"
+- `przedmiot.Id` (duże) = **etykieta w każdym pudełku** z listy — "co ma każde pudełko"
+- pętla = szukanie pudełka po etykiecie (karteczka "5" → pudełko z etykietą "5")
+
+## Werdykt dnia
+
+- "frontend pojebany, backend łatwiejszy" → backend = jedna droga (prośba → SQL → odpowiedź), frontend = wszystko naraz (pola + tabela + zdarzenia). Nie trudniejszy — **gęstszy**. Cel usera = backend; frontend ma działać, nie być wyrecytowanym.
+- Koniec dnia: "strasznie to mętne" → zwolnienie z rozumienia detali (lambda, `List<Przedmiot>?`, `await`) — wrócą przy powtórkach.
+- **Dowód postępu:** `foreach` (tygodniowy słaby punkt) siedzi w działającym kodzie usera — "najpierw używasz, potem rozumiesz".
+
+## Następna sesja (Dzień 8)
+
+1. **NOWA FUNKCJA (user sam zaproponował): "Łopata do Łopaty"** — dodawanie przedmiotu, który JUŻ istnieje, ma zwiększać ilość zamiast tworzyć duplikat. Plan: w `Dodaj()` (gałąź POST) — foreach+if po liście (wzorzec "szukanie" z Edytuj): jak `przedmiot.Nazwa == nazwa` → **PUT** z ilością `przedmiot.Ilosc + ilosc` (zamiast POST). Nowy koncept: **flaga** (`bool znaleziony` — "czy coś znalazłem?"). Uwaga: user był zmęczony — robić na spokojnie, małe kroki.
+2. **Powtórka z pamięci** (recall drill) — koncepty z Dni 5–7 (wzorzec 4 klocki, sentynek, var)
+3. `appsettings.json` — connection string poza kodem (duplikat w GET/POST/PUT/DELETE kontrolera)
+4. Powtórka `foreach` — wzorzec "szukanie po liście" z Edytuj
+5. Serwery do testów: API 5000, strona 5008 (odpalać w tle)
