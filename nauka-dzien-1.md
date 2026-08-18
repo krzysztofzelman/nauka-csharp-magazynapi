@@ -454,3 +454,54 @@ Cały `MagazynWeb\Components\Pages\Home.razor` wytłumaczony linia po linii. **M
 3. `appsettings.json` — connection string poza kodem (duplikat w GET/POST/PUT/DELETE kontrolera)
 4. Powtórka `foreach` — wzorzec "szukanie po liście" z Edytuj
 5. Serwery do testów: API 5000, strona 5008 (odpalać w tle)
+
+---
+
+## Dzień 8 (2026-08-18) — Łopata do Łopaty 🚜 + appsettings.json ✅ ZAMKNIĘTY
+
+### 1. Nowa funkcja: „Łopata do Łopaty" (pomysł usera!) ✅
+
+Dodawanie przedmiotu, który JUŻ istnieje = podbij ilość zamiast duplikatu. W `Dodaj()` (gałąź `if (edytowanyId == 0)`):
+- **flaga** `bool znaleziony = false;` — NOWY WZORZEC: pętla kończy się, a program musi wiedzieć CZY znalazł → flaga pamięta za pętlę (start false → `znaleziony = true` w ifie trafienia → po pętli `if (znaleziony == false)` → POST)
+- foreach+if szukanie po NAZWIE (wzorzec z Edytuj, ale `przedmiot.Nazwa == nazwa` zamiast Id)
+- trafienie → `var podbity = new Przedmiot { Nazwa = przedmiot.Nazwa, Ilosc = przedmiot.Ilosc + ilosc, Cena = przedmiot.Cena }` + PUT na `przedmiot.Id` (numer ZNALEZIONEGO!)
+- **cena przy podbijaniu: zostaje TA z bazy** (`Cena = przedmiot.Cena`), wpisana w formularzu ignorowana — decyzja projektowa (dostawa nie zmienia ceny; zmianę ceny robi się Edytuj). User sam o to zapytał — dobry znak!
+- TEST: Łopata 40 → kilka dodań → 49, zero duplikatów ✅
+
+### 2. Demo „po co backend" 📵
+
+Zatrzymany API → klik Dodaj: nic się nie zapisuje; F5: czerwona strona błędu (Developer Exception Page) — `SocketException: Nie można nawiązać połączenia... (localhost:5000)` + stos wskazuje `Home.razor` → `GetFromJsonAsync("http://localhost:5000/api/przedmioty")`. **To był DOWÓD, nie awaria** — user przestraszył się strony błędu, trzeba było od razu wyjaśnić „tak miało być". Analogia magazyniera: frontend = sprzedawca bez klucza, backend = jedyny z kluczem do magazynu (bazy); telefon = HTTP, wspólny język = JSON. Po restarcie API — F5 → wszystko wraca.
+
+### 3. appsettings.json — jedno źródło prawdy 📒
+
+- Problem: connection string zduplikowany w 4 metodach kontrolera (linie 12/36/52/70 — GET/POST/PUT/DELETE)
+- Fix: sekcja `ConnectionStrings` w appsettings.json + w kontrolerze **wstrzykiwanie**: pole `private readonly IConfiguration _config;` + konstruktor `public PrzedmiotyController(IConfiguration config) { _config = config; }` + w każdej metodzie `string connectionString = _config.GetConnectionString("MagazynDb");`
+- **JSON jest pedantyczny**: user zrobił 3 błędy — `ConectionStrings` (literówka n), `MagazynDB` vs `MagazynDb` (wielkość liter!), brak przecinka + AllowedHosts w środku klamer. JSON = format dla maszyn, zero „mniej więcej"
+- Konstruktor też miał literówki: `Iconfiguration_conging`, `publicPrzedmiotyController` (brak spacji!), `_confing` — user napisał sam kawałek A i B (4 metody już z GetConnectionString!), tylko nagłówek klasy się wysypał
+- Backslashe w JSON: `\\` (w C# było `@` z jednym)
+
+### 4. Koncepty dnia (powtórzyć jutro!)
+
+- **flaga** = zmienna pamiętająca „czy coś się wydarzyło" (bool: true/false)
+- **bool** = typ tak/nie (znany już z `while (true)` z Hasla); czwarty typ obok int/string/decimal
+- **pole klasy vs zmienna lokalna**: pole = szuflada w biurku klasy (wszystkie metody widzą — `przedmioty`, `nazwa`, `_config`); lokalna = kartka w ręce jednej metody (`znaleziony` — Usun() fizycznie nie ma do niej dostępu, nawet gdyby chciała). Dowód z kodu: Usun() używa pola `przedmioty`
+- **konstruktor** = metoda jak klasa, bez typu, odpala się raz przy narodzinach; user już go używa: `new SqliteConnection(connectionString)` ×4
+- **wstrzykiwanie (DI)** = framework sam tworzy kontroler i wsuwa pudełko (IConfiguration) do konstruktora — jak `@inject HttpClient` w Blazorze
+- `var` = „C# sam zgadnij typ" (działa gdy prawa strona zdradza typ; puste pudełko = typ jawnie)
+- sentynek `edytowanyId == 0` — najtrudniejszy koncept; karteczka zapisywana w DOKŁADNIE 3 linijkach pliku (62/104/126) — „życie karteczki"
+
+### 5. Powtórka z pamięci (koniec sesji, wynik)
+
+- Pyt 1 (Łopata do Łopaty): ✅ „4 + 6 = 10 w bazie" + sam zapytał o cenę
+- Pyt 2 (flaga): ✅ true/false („albo znalazł true albo nie false")
+- Pyt 3 (lokalna vs pole, czy Usun() przeczyta znaleziony): ⚠️ odpowiedział o POTRZEBIE zamiast MOŻLIWOŚCI — „nie widzę potrzeby" — trzeba było rozdzielić: nie może, bo fizycznie jej nie ma po zakończeniu Dodaj()
+- Pyt 4 (po co konstruktor): ❓ user poprosił o przykład zamiast odpowiedzi — pokazany konstruktor w JEGO kontrolerze + `new SqliteConnection` jako znany przykład; odpowiedź jednym zdaniem nie padła (sesja się kończyła)
+- **User PROSIŁ: „jutro sie powtórzy na poczastku sesji"** — powtórka otwiera Dzień 9!
+
+### Następna sesja (Dzień 9)
+
+1. **Powtórka z pamięci NA START** (user prosił!): flaga, bool, pole vs lokalna, konstruktor, wstrzykiwanie, GetConnectionString, sentynek (0 = pusto), var
+2. Zostawione „wiszące": pyt 4 powtórki (co robi konstruktor jednym zdaniem)
+3. Pomysł na przyszłość (user zaproponował wcześniej): cena przy podbijaniu — można kiedyś zrobić opcję „aktualizuj też cenę"
+4. Serwery do testów: API 5000 (`dotnet run --project MagazynApi --no-build --urls http://localhost:5000`), strona 5008 (profil http)
+ 

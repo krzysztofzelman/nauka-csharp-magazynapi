@@ -5,13 +5,20 @@ using Microsoft.Data.Sqlite;
 [Route("api/[controller]")]
 public class PrzedmiotyController : ControllerBase
 {
+    private readonly IConfiguration _config;
+
+    public PrzedmiotyController(IConfiguration config)
+    {
+        _config = config;
+    }
+
     [HttpGet]
-        public List<Przedmiot> GetPrzedmioty()
+        public List<Przedmiot> GetPrzedmioty() // GET: api/przedmioty
         {
             List<Przedmiot> lista = new List<Przedmiot>();
-            string connectionString = @"Data Source=D:\Dane\Projekty\NaukaCSharp\Magazyn\magazyn.db";
+            string connectionString = _config.GetConnectionString("MagazynDb");
 
-            using (SqliteConnection connection = new SqliteConnection(connectionString))
+        using (SqliteConnection connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
                 SqliteCommand command = connection.CreateCommand();
@@ -31,9 +38,9 @@ public class PrzedmiotyController : ControllerBase
             return lista;
         }
     [HttpPost]
-    public void DodajPrzedmiot(Przedmiot nowy)
+    public void DodajPrzedmiot(Przedmiot nowy) // POST: api/przedmioty
     {
-        string connectionString = @"Data Source=D:\Dane\Projekty\NaukaCSharp\Magazyn\magazyn.db";
+        string connectionString = _config.GetConnectionString("MagazynDb");
         using (SqliteConnection connection = new SqliteConnection(connectionString))
         {
             connection.Open();
@@ -47,9 +54,9 @@ public class PrzedmiotyController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public void EdytujPrzedmiot(int id, Przedmiot nowy)
+    public void EdytujPrzedmiot(int id, Przedmiot nowy) // PUT: api/przedmioty/5
     {
-        String connectionString = @"Data Source=D:\Dane\Projekty\NaukaCSharp\Magazyn\magazyn.db";
+        string connectionString = _config.GetConnectionString("MagazynDb");
 
         using (SqliteConnection connection = new SqliteConnection(connectionString))
         {
@@ -67,7 +74,7 @@ public class PrzedmiotyController : ControllerBase
     [HttpDelete("{id}")]
     public void UsunPrzedmiot(int id)
     {
-        String connectionString = @"Data Source=D:\Dane\Projekty\NaukaCSharp\Magazyn\magazyn.db";
+        string connectionString = _config.GetConnectionString("MagazynDb");
         using (SqliteConnection connection = new SqliteConnection(connectionString))
         {
             connection.Open();
