@@ -13,30 +13,30 @@ public class PrzedmiotyController : ControllerBase
     }
 
     [HttpGet]
-        public List<Przedmiot> GetPrzedmioty() // GET: api/przedmioty
-        {
-            List<Przedmiot> lista = new List<Przedmiot>();
-            string connectionString = _config.GetConnectionString("MagazynDb");
+    public List<Przedmiot> GetPrzedmioty() // GET: api/przedmioty
+    {
+        List<Przedmiot> lista = new List<Przedmiot>();
+        string connectionString = _config.GetConnectionString("MagazynDb");
 
         using (SqliteConnection connection = new SqliteConnection(connectionString))
+        {
+            connection.Open();
+            SqliteCommand command = connection.CreateCommand();
+            command.CommandText = "SELECT Id, Nazwa, Ilosc, Cena FROM Przedmioty";
+            SqliteDataReader reader = command.ExecuteReader();
+            while (reader.Read())
             {
-                connection.Open();
-                SqliteCommand command = connection.CreateCommand();
-                command.CommandText = "SELECT Id, Nazwa, Ilosc, Cena FROM Przedmioty";
-                SqliteDataReader reader = command.ExecuteReader();
-                while (reader.Read())
+                lista.Add(new Przedmiot
                 {
-                    lista.Add(new Przedmiot
-                    {
-                        Id = Convert.ToInt32(reader["Id"]),
-                        Nazwa = Convert.ToString(reader["Nazwa"]) ?? "",
-                        Ilosc = Convert.ToInt32(reader["Ilosc"]),
-                        Cena = Convert.ToDecimal(reader["Cena"])
-                    });
-                }
+                    Id = Convert.ToInt32(reader["Id"]),
+                    Nazwa = Convert.ToString(reader["Nazwa"]) ?? "",
+                    Ilosc = Convert.ToInt32(reader["Ilosc"]),
+                    Cena = Convert.ToDecimal(reader["Cena"])
+                });
             }
-            return lista;
         }
+        return lista;
+    }
     [HttpPost]
     public void DodajPrzedmiot(Przedmiot nowy) // POST: api/przedmioty
     {

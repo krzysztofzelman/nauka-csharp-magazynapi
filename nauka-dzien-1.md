@@ -504,4 +504,42 @@ Zatrzymany API → klik Dodaj: nic się nie zapisuje; F5: czerwona strona błęd
 2. Zostawione „wiszące": pyt 4 powtórki (co robi konstruktor jednym zdaniem)
 3. Pomysł na przyszłość (user zaproponował wcześniej): cena przy podbijaniu — można kiedyś zrobić opcję „aktualizuj też cenę"
 4. Serwery do testów: API 5000 (`dotnet run --project MagazynApi --no-build --urls http://localhost:5000`), strona 5008 (profil http)
+
+---
+
+## Dzień 9 (2026-08-19) — Powtórka z pamięci (krótka sesja) — ZAMKNIĘTY ✅
+
+### 1. Powtórka na start (user prosił)
+
+- **Konstruktor** (wiszące pyt 4 z Dnia 8): user: „nic mi nie mówi jakieś ustawiania kontrolera... to chyba jest wyższy level, musiałbym więcej podstaw ogarnąć" → **reframe: to NIE wyższy level** — most przez znany kod: `new SqliteConnection(connectionString)` (pisze 4× dziennie!) = wywołanie konstruktora; tabela „Ty wciskasz guzik vs framework wciska guzik". **Konstruktor ODŁOŻONY na półkę** (nie musisz dziś umieć — wróci przy powtórkach). Odpowiedź jednym zdaniem: *konstruktor = metoda, która odpala się przy narodzinach obiektu i wsuwa pudełko (tu: ustawienia) do szuflady, z której korzystają wszystkie metody*
+- **Flaga/bool** (co znaczy true/false?): user odpowiedział **dosłownie** — „true prawda, false fałsz" ✅ → domknięte kontekstem kodu: `znaleziony = true` stoi WEWNĄTRZ ifa trafienia (linia 105) = „znalazłem → PUT podbij"; `if (znaleziony == false)` po pętli (linia 108) = „nie znalazłem → POST nowy"; flaga startuje false („jeszcze nic nie wiem") — pętla kończy się, flaga pamięta za nią wynik
+- **Sentynek** (scenariusz: klik Edytuj Łopata Id=3 → przycisk?): user zamiast odpowiedzi: „w którym miejscu jest to w kodzie?" → **mapa 6 linijek `edytowanyId`** (62 deklaracja / 140 zapis z Edytuj / 13 przycisk czyta / 97 Dodaj czyta / 117 PUT / 118 reset) → odpowiedź: „ok" ✅ — po mapie odpowiedź na scenariusz (3 ≠ 0 → ZAPISZ) zrozumiała
+
+### 2. Przeciążenie — WAŻNE
+
+- user: „**za dużo skakania po kodzie jak na dziś**" — 6 linijek naraz = za dużo
+- **Wniosek: przy pytaniu „gdzie to jest w kodzie" pokazywać NAJPIERW 2-3 kluczowe linijki** (zapis + czytanie), resztę dopiero na życzenie; mapa jest dobra, ale małymi porcjami
+
+### 3. „Koniec dnia" — a jednak nie! (user: „nie pdsiałem że konczymy. chciałem coś pisać dalej")
+
+- **Backend — sprzątanie wcięć ✅ (delegacja):** user uznał za „pierdołę" → asystent wyrównał `GetPrzedmioty()` (jedyna rozjechana metoda; ZERO zmian logiki) → build OK (4× warning CS8600 — STARE, nie od kosmetyki)
+- **Incydent portowy #2:** user otworzył `http://localhost:5109/` → 404 na korzeniu (NORMALNE — API odpowiada tylko pod `/api/...`; „centrala vs numer wewnętrzny"), a strona wywaliła SocketException (localhost:5000) — bo API działał na 5109 (z VS), a Home.razor ma twardo wpisane 5000 → **API odpalone na 5000 w tle → 200 → strona wróciła. UWAGA: API z VS = 5109 NIE działa ze stroną (strona zawsze szuka 5000)**
+- **Kolumna „Wartość" ✅ (user wybrał z 3 opcji, zrobił SAM — „jest policzył"):** `<th>Wartość</th>` + `<td>@(przedmiot.Ilosc * przedmiot.Cena) zł</td>` — nowy koncept: `@( ... )` = nawiasy „tutaj liczymy"; bonus: suma kolumny = „Wartość magazynu" na dole (moment weryfikacji)
+- **„Liczba pozycji" ✅ (user: „nei wiem czy to ma sens ale można dodać" → MA sens: metryka SKU — ile RÓŻNYCH produktów; sztuki = `+ przedmiot.Ilosc`, pozycje = `+ 1`):** 4 kawałki: pole `iloscpozycji` (user zostawił małe p — działa, konwencja camelCase zaproponowana, nie wymuszona), metoda `ObliczIloscPozycji()` (**user dał WŁASNĄ nazwę — OK!** + `iloscpozycji++` = skrót od `+ 1` — OK!), wywołania 3× (user: „czemu aż tyle razy?" → bo liczenie nie dzieje się samo, lista zmienia się w 3 miejscach — tak jak ObliczWartosc/ObliczIlosc), wystawa `<p>Liczba pozycji: @iloscpozycji</p>`; **user wpisał pytanie W KOD: `ObliczIloscPozycji();czemu a` (tekst po `;` = błąd kompilacji) → sam usunął → build czysty → „jest działa" ✅**
+
+### 4. Wyszukiwarka ✅ (user wybrał zamiast „Najdroższego przedmiotu")
+
+- „Najdroższy przedmiot" odrzucony przez usera: „po chuj to komuś? jak coś jest tylko troszkę tańsze o 2 zł to już nie pokaże... filtrowanie tabeli ma sens" — **trafna krytyka: sam max = za mało informacji; filtrowanie = standard sklepowy**
+- **Trik:** bez nowej listy i LINQ — bramka `@if` na KAŻDYM wierszu (pętla zostaje nietknięta)
+- Nowe koncepty: `Contains` = „czy tekst zawiera", `||` = „lub", `@bind:event="oninput"` = aktualizacja przy każdym znaku (domyślnie @bind czeka na opuszczenie pola)
+- **3 błędy usera po drodze:** (1) **brak `@` przed `if`** — granica z Dnia 4, DRUGI raz to samo; (2) **input zgubił `@bind="szukanaNazwa"` przy poprawce** — został sam `@bind:event="oninput"` = MARTWY input (bez mostu wpis nigdzie nie leci, zmienna zawsze pusta) → user: „to jest jakaś gówno funkcja nikomu nie potrzeba" → znaleziona 1 brakująca rzecz → „jest działa"; (3) **wielkość liter:** `Contains` rozróżnia — „łopata" nie znajdowało „Łopata" → fix: `Contains(szukanaNazwa, StringComparison.OrdinalIgnoreCase)` = „ignoruj wielkość liter" (obiecanym „lekiem")
+- Incydent: build blokowany przez DZIAŁAJĄCĄ stronę (MagazynWeb PID 20856 — exe w użyciu, MSB3027) → taskkill → build czysty
+- Efekt końcowy Dnia 9: tabela z kolumną Wartość + podsumowania (sztuki/pozycje) + wyszukiwarka — „magazyn jak w prawdziwym sklepie" ✅
+
+### Następna sesja (Dzień 10)
+
+1. **Powtórka dzisiejszych pytań** (user zapowiedział): flaga/bool, sentynek (karteczka), konstruktor (odłożony — wrócić łagodnie, np. „kto wciska guzik?"), **pole vs lokalna** (wiszące — 2 sesje z rzędu nie padło)
+2. Konwencja camelCase do przypomnienia przy okazji: `iloscpozycji` vs `iloscPozycji` (spójność z `iloscSztuk`)
+3. Pomysły na przyszłość: (a) **„aktualizuj też cenę"** przy podbijaniu (pomysł usera z Dnia 8! — checkbox + druga flaga), (b) sortowanie po nagłówkach kolumn (nowy koncept OrderBy — trudniejsze), (c) ranking/analiza ABC (zamiast pojedynczego maxa)
+4. Serwery do testów: API 5000 (bg), strona 5008 (profil http); API z VS = 5109 NIE działa ze stroną
  
