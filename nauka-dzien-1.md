@@ -595,4 +595,30 @@ Zatrzymany API → klik Dodaj: nic się nie zapisuje; F5: czerwona strona błęd
 1. **Przegląd wszystkich plików** (konsola → API → strona), linia po linii — user: „ja nic nie wiem co tam jest w tym kodzie i tych plikach"
 2. Po fundamentach: **PZ/WZ najpierw w KONSOLI** (opcja 6 PZ → opcja 7 WZ/FIFO) — tam user rozumie 100% — potem przeniesienie silnika do API
 3. Bez pośpiechu; możliwa lekka sesja wieczorna
+
+---
+
+## Dzień 11 (2026-08-20) — sesja planowania: struktura, angielski w kodzie, PZ/WZ (bez kodu)
+
+### Co się stało
+- Przegląd struktury workspace'a: 5 projektów (Dzien1 gra, Hasla generator, Magazyn konsola, MagazynApi, MagazynWeb) — user dostał mapę + co jest w każdym
+- Odpowiedź na „co dalej": wiszące koncepty (pole vs lokalna, konstruktor, sentynek) + plan nowych funkcji
+- Gra (Dzien1) i Hasla = **zamknięte ćwiczenia**; **Magazyn = projekt flagowy** (rozwijany; cel: WMS jak w pracy)
+
+### Decyzje (zapisane, obowiązują)
+1. **Angielski w kodzie — od TERAZ, ale tylko w nowym kodzie.** Stary kod NIE jest przepisywany (zero nauki + ryzyko: JSON kontrakt, baza, 3 projekty). Zasada „leave the campsite cleaner": plik tłumaczymy na angielski przy okazji, gdy go dotykamy (narzędzie: VS rename Ctrl+R, R — zmienia wszędzie naraz)
+2. **Krok 0 (następna sesja, kosztuje nic):** model `Partia` → **`Batch`** — nowy, nic go nie używa; PZ/WZ od startu po angielsku (`Batch`, `Quantity`, `ReleaseStock()`)
+3. **Baza SQLite zostaje po polsku** (kolumny `Ilosc`, `Cena`) — wewnętrzny detal, nie musi iść w parze z kodem
+4. Teksty na stronie (przyciski, nagłówki) mogą zostać po polsku — osobna decyzja
+
+### Stan niedokończonych rzeczy (sprawdzone w kodzie)
+- ⏹️ `PartieController.cs` = **pusty szkielet** (Class1 z szablonu VS, zero endpointów) — niezacommitowany
+- ⏹️ Konsola: opcja 6/7 (PZ/WZ) nie istnieje (menu kończy się na „6 - Wyjście")
+- ⏹️ Strona: nic o partiach
+- ⏹️ Sesja FUNDAMENTY (przegląd plików linia po linii) — zaplanowana, niezrobiona
+
+### Następna sesja (Dzień 12)
+1. FUNDAMENTY: przegląd konsola → API → strona, linia po linii (user prosił)
+2. Krok 0: `Partia` → `Batch`
+3. PZ/WZ w KONSOLI (opcja 6 PZ / 7 WZ-FIFO), potem API (dokończyć PartieController po angielsku), potem strona
  
