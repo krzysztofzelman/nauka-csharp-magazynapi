@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -19,5 +20,14 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+string cs = builder.Configuration.GetConnectionString("MagazynDb");
+using (SqliteConnection connection = new SqliteConnection(cs))
+{
+    connection.Open();
+    SqliteCommand command = connection.CreateCommand();
+    command.CommandText = "CREATE TABLE IF NOT EXISTS Partie (Id INTEGER PRIMARY KEY AUTOINCREMENT, PrzedmiotId INTEGER, Ilosc INTEGER, Cena REAL, Data TEXT, Status TEXT)";
+    command.ExecuteNonQuery();
+}
 
 app.Run();

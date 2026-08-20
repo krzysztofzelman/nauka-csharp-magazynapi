@@ -62,7 +62,7 @@ public class PrzedmiotyController : ControllerBase
         {
             connection.Open();
             SqliteCommand command = connection.CreateCommand();
-            command.CommandText = "UPDATE Przedmioty SET Nazwa = @Nazwa, Ilosc = @Ilosc, Cena = @Cena WHERE Id = @Id";
+            command.CommandText = "UPDATE Przedmioty SET Nazwa =@Nazwa, Ilosc = @Ilosc, Cena = @Cena WHERE Id = @Id";
             command.Parameters.AddWithValue("@Id", id);
             command.Parameters.AddWithValue("@Nazwa", nowy.Nazwa);
             command.Parameters.AddWithValue("@Ilosc", nowy.Ilosc);

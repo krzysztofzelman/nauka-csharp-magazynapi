@@ -542,4 +542,57 @@ Zatrzymany API → klik Dodaj: nic się nie zapisuje; F5: czerwona strona błęd
 2. Konwencja camelCase do przypomnienia przy okazji: `iloscpozycji` vs `iloscPozycji` (spójność z `iloscSztuk`)
 3. Pomysły na przyszłość: (a) **„aktualizuj też cenę"** przy podbijaniu (pomysł usera z Dnia 8! — checkbox + druga flaga), (b) sortowanie po nagłówkach kolumn (nowy koncept OrderBy — trudniejsze), (c) ranking/analiza ABC (zamiast pojedynczego maxa)
 4. Serwery do testów: API 5000 (bg), strona 5008 (profil http); API z VS = 5109 NIE działa ze stroną
+
+---
+
+## Dzień 10 (2026-08-20) — Powtórka (krótka sesja, przerwana przez usera) — ZAMKNIĘTY ⏹️
+
+### 1. Flaga/bool — ZAMKNIĘTE ✅ (z odbudową)
+
+- **POST/PUT ZAPOMNIANE** (user: „nie wiem nie pamietam, co robi te post iu put") — koncepty Dnia 3, używane w JEGO kodzie od Dnia 5!
+- **Odbudowa kotwicą konsoli:** opcja 1 (Dodaj/INSERT) = POST, opcja 3 (Edytuj/UPDATE) = PUT — na JEGO kodzie: `PostAsJsonAsync(".../api/przedmioty", ...)` vs `PutAsJsonAsync(".../api/przedmioty/{edytowanyId}", ...)`
+- Scenariusz duplikatu: POST = drugi wiersz „Łopata" ❌ / PUT = podbicie 40→45 ✅
+- Check 1 (user wskazał `if (przedmiot.Nazwa == nazwa)` zamiast `znaleziony = true;`) — rozdzielone: if PYTA / zapis na kartce ODPOWIADA (tylko w środku klamer)
+- Check 2 (Miotacz ognia, którego nie ma): **POST ✅** — ale rozumowaniem „POST = dodaj", nie przez flagę → domknięte (kartka zostaje false → `if (znaleziony == false)` → POST)
+- **Wniosek: nawet dobrze używany kod (POST/PUT od Dnia 5) odpada po 1 dniu — retencja krótka, powtarzać z kotwicą konsoli**
+
+### 2. Sentynek — NIE padło (4. sesja z tym konceptem!) ⚠️
+
+- Scenariusz (klik Edytuj Łopata Id=3 → Dodaj czy Zapisz?) → **„to nic nie robi."** = 3. echo Dnia 7/8 (sentynek czytany jako BIERNY)
+- Re-anchor: karteczka = NOTATKA (pasywna — i tak ma być!), przycisk = PRACOWNIK (czyta notatkę) + 3-linijkowe życie karteczki
+- **„nie wiem, nie rozuemiem strzepów kodu."** = SYGNAŁ PRZECIĄŻENIA — odrzuca nawet 3-linijkowe fragmenty
+- Wersja ZERO kodu (czysta historia karteczki w 4 krokach) + zasada 1-zdaniowa (0 = pusta / nie-0 = numer wiersza)
+- **FEEDBACK USER (ważny!):** „nie blok kodu moge analizowac... pojedyncze linijki mało znacą. sam nie bardzo chesz tłumaczysz pojedzynczych słow w kodzie" — **bloki za dużo, pojedyncze linijki bez kontekstu za mało; user chce SŁOWO PO SŁOWIE, jedna linijka naraz**
+- Próba: linijka nr 1 `private int edytowanyId = 0;` rozłożona słowo po słowie (private / int / nazwa / = 0 / ;) → user: „dobra. skoncz" ⏹️ — sesja przerwana PRZED domknięciem (sentynek wisi dalej)
+
+### Następna sesja (Dzień 11)
+
+1. **Sentynek — kontynuacja metodą SŁOWO PO SŁOWIE** (user sam wskazał metodę; jedna linijka naraz, zero bloków; linijka 2 = zapis `edytowanyId = id;` w Edytuj) — opcjonalnie najpierw DEMO na żywo (klik Edytuj → przycisk zmienia się Dodaj→Zapisz→Dodaj; zadziałało w Dniu 6)
+2. Wiszące dalej: pole vs lokalna (3 sesje!), konstruktor („kto wciska guzik?"), POST/PUT (świeża odbudowa — sprawdzić czy siedzi)
+3. Pomysły na przyszłość (bez zmian): „aktualizuj też cenę", sortowanie (OrderBy), ranking ABC
+4. Serwery: API 5000 (bg), strona 5008
+
+---
+
+## Dzień 10 (2026-08-20) — FINAŁ wieczorny: PZ/WZ + FIFO (strategia ✅) + tabela + model ✅; kontroler ODŁOŻONY
+
+### Strategia (user myślał jak WMS-owiec!)
+- Odrzucony checkbox „aktualizuj też cenę" → user sam zaproponował **PZ/WZ** (przyjęcie/wydanie)
+- **Cena zakupu (z PZ) ≠ cena sprzedaży (Edytuj)** — PZ niesie cenę zakupu, nie rusza sprzedaży
+- **Promocja od dostawcy = po prostu niższa cena zakupu** → partia z własną ceną, zero konfliktu
+- **FIFO wybrane** (standard rynku, LIFO wycofane w IFRS); **blokada partii** = kolumna `Status` (FIFO bierze najstarszą AKTYWNĄ) — projektowane od początku
+
+### Kod (wszystko działa)
+- ✅ **Tabela `Partie`** w Program.cs (`CREATE TABLE IF NOT EXISTS`; user pisał SAM — ~12 literówek: usung/buldier/INTEGRER/NO EXITS/ExecuteNonQwerty → fix asystenta; build 0 błędów; API start 200)
+- ✅ **Model `Partia.cs`** (bliźniak Przedmiot.cs; `PArtia` → fix wielkości liter)
+- ⏹️ **Kontroler PartieController PRZERWANY** — user przeciążony; wzorce: (a) 2× spacje przed `@` w parametrach, (b) wklejka ≠ dysk (brak Ctrl+S)
+
+### FEEDBACK usera (obowiązuje od teraz)
+- **ZERO gotowców**: „jebeisz koda ja ma przepsiawać" / „nie tłumaczysz co robisz" — user pisze i umie wytłumaczyć KAŻDĄ linijkę; inaczej cofamy się i tłumaczymy
+- User SAM odpala build i serwer (F5); „za dużo tokenów" — odpowiedzi krótko
+
+### Plan (następna sesja — FUNDAMENTY, zero nowych funkcji)
+1. **Przegląd wszystkich plików** (konsola → API → strona), linia po linii — user: „ja nic nie wiem co tam jest w tym kodzie i tych plikach"
+2. Po fundamentach: **PZ/WZ najpierw w KONSOLI** (opcja 6 PZ → opcja 7 WZ/FIFO) — tam user rozumie 100% — potem przeniesienie silnika do API
+3. Bez pośpiechu; możliwa lekka sesja wieczorna
  
