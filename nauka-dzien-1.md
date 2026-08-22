@@ -621,4 +621,37 @@ Zatrzymany API → klik Dodaj: nic się nie zapisuje; F5: czerwona strona błęd
 1. FUNDAMENTY: przegląd konsola → API → strona, linia po linii (user prosił)
 2. Krok 0: `Partia` → `Batch`
 3. PZ/WZ w KONSOLI (opcja 6 PZ / 7 WZ-FIFO), potem API (dokończyć PartieController po angielsku), potem strona
+
+---
+
+## Dzień 12 (2026-08-22) — Fundamenty (start) + Krok 0: Batch ✅ ZAMKNIĘTY
+
+### Fundamenty — część 1 (skrócona, przerwana przytłoczeniem)
+- **Mapa:** konsola = API = strona — ta sama baza, ta sama piosenka SQL; różni się wejście (klawiatura/klik) i wyjście (ekran/JSON/tabela)
+- **appsettings.json:** API bierze connection string z konfiguracji (`GetConnectionString("MagazynDb")`) zamiast na sztywno; wartość wskazuje TEN SAM `magazyn.db` co konsola (jeden magazyn, dwa fronty)
+- **Porównanie SELECT:** konsola `Console.WriteLine` vs API `lista.Add(...)` + `return lista` — piosenka identyczna do `while (reader.Read())`, różni się tylko oddanie wyniku
+- ⚠️ User: „jeden wielki bełkot" → ZERO teorii, tylko konkretne kroki (wzorzec znany)
+- Wyjaśnione przy okazji: Id JEST w bazie (auto), tylko opcja 2 go nie pokazuje (SELECT bez Id) — stąd parking `idy` w opcji 3/4
+
+### Krok 0: renaming Partia → Batch ✅ (commit 4ba716d)
+- User zrobił rename w VS (Ctrl+R, R / prawy klik) — plik `Partia.cs` → `Batch.cs`, klasa `public class Batch`
+- **Nowy koncept: refaktoryzacja/rename** = zmiana nazwy bez zmiany działania; VS poprawia klasę + plik + odwołania jednym ruchem
+- **Pole `BatchNumber` dodane** (pomysł usera!): „chcę szukać po numerze partii/serii" — `public string BatchNumber { get; set; } = "";`
+- **Decyzja projektowa (user!):** numer partii (`BatchNumber` = GRUPA sztuk) ≠ numer seryjny (`SerialNumber` = POJEDYNCZA sztuka); „nie wrzucamy do jednego wora" — serial = przyszła OSOBNA tabelka (1 partia = wiele sztuk = wiele seriali)
+- Build + serwer OK: `dotnet run` w folderze MagazynApi → http://localhost:5109 (0 błędów, stare warningi CS8600)
+
+### Jak odpalać API (utrwalone)
+- `dotnet run` w folderze `MagazynApi` = poprawny sposób (VS Code niepotrzebny)
+- Zmieniłeś kod → **Ctrl+C** → `dotnet run` od nowa (inaczej serwer działa na starym kodzie)
+- Adres: „Now listening on" w logu (tu: 5109)
+
+### Stan na koniec dnia
+- ✅ `Batch.cs` + pole `BatchNumber` — w repo (4ba716d, pushnięte)
+- ✅ Poprawka komentarzy w Home.razor (`//` w tagach → `@* *@`) — MagazynWeb 7b3adbf, pushnięte
+- ⏹️ `PartieController` — pusty szkielet, zero endpointów
+- ⏹️ PZ/WZ: konsola (opcja 6/7) → API → strona
+
+### Następna sesja (Dzień 13)
+1. **Pierwszy endpoint w `PartieController`:** GET „pokaż wszystkie partie" — piosenka jak `GetPrzedmioty` (SELECT + while + lista.Add)
+2. Potem: POST (PZ — przyjęcie), konsola opcja 6/7, na końcu strona
  
