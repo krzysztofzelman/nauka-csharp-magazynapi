@@ -26,7 +26,7 @@ using (SqliteConnection connection = new SqliteConnection(cs))
 {
     connection.Open();
     SqliteCommand command = connection.CreateCommand();
-    command.CommandText = "CREATE TABLE IF NOT EXISTS Partie (Id INTEGER PRIMARY KEY AUTOINCREMENT, PrzedmiotId INTEGER, Ilosc INTEGER, Cena REAL, Data TEXT, Status TEXT)";
+    command.CommandText = "CREATE TABLE IF NOT EXISTS Partie (Id INTEGER PRIMARY KEY AUTOINCREMENT, PrzedmiotId INTEGER, Ilosc INTEGER, Cena REAL, Data TEXT, Status TEXT, BatchNumber TEXT)";
     command.ExecuteNonQuery();
 }
 

@@ -654,4 +654,37 @@ Zatrzymany API → klik Dodaj: nic się nie zapisuje; F5: czerwona strona błęd
 ### Następna sesja (Dzień 13)
 1. **Pierwszy endpoint w `PartieController`:** GET „pokaż wszystkie partie" — piosenka jak `GetPrzedmioty` (SELECT + while + lista.Add)
 2. Potem: POST (PZ — przyjęcie), konsola opcja 6/7, na końcu strona
+
+---
+
+## Dzień 13 (2026-08-22) — BatchController: GET + POST działają na żywo ✅ ZAMKNIĘTY
+
+### Kontroler BatchController (był pusty szkielet `Class1`)
+- Koncept: **kontroler TO JEST klasa** + 3 dodatki: znaczniki (`[ApiController]`, `[Route]`), dziedziczenie (`: ControllerBase`), metody = endpointy; klucz: **KTO WOŁA** — zwykłą klasę wołasz Ty (`new ...`), kontrolera woła framework, gdy ktoś wejdzie na adres (DI z Dnia 8; analogia recepcjonisty)
+- Route: `[Route("api/[controller]")]` → `[controller]` = nazwa klasy bez końcówki → **api/Batch** (adres = port z logu serwera + ścieżka z Route)
+- User napisał nagłówek **SAM** (własna nazwa `_configuration` zamiast `_config` — działa; literówka `confing` → poprawiona)
+- GET `GetBatches()` — piosenka GetPrzedmioty (SELECT + while + lista.Add + return); dopisana przez asystenta (user: „to popraw")
+- POST `AddBatch(Batch nowy)` — piosenka DodajPrzedmiot (INSERT + 6× AddWithValue + ExecuteNonQuery); user pisał sam, **podpowiedź VS dała tylko połowę** (brak Parameters + ExecuteNonQuery = INSERT nie wykonany!)
+
+### Kolumna BatchNumber w bazie
+- Model miał pole, tabela nie miała kolumny → jednorazowy `ALTER TABLE Partie ADD COLUMN BatchNumber TEXT` w Program.cs → wykonał się przy starcie → **drugi start: „duplicate column name"** (ALTER po raz drugi; przewidziane) → user spanikował („nie działa") → reframe: to dowód, że kolumna JUŻ jest → fix: ALTER usunięty, BatchNumber dopisany do CREATE TABLE (dla świeżych baz)
+
+### Test na żywo (curl)
+- POST: `curl -X POST .../api/Batch -d @plik.json` → **HTTP 200** → GET api/Batch pokazał partię: `{"id":1,"batchNumber":"KOSIARKA-0822","przedmiotId":1,"ilosc":10,"cena":540,"data":"2026-08-22","status":"Przyjete"}`
+- **BUG znaleziony testem:** `batchNumber: ""` mimo wysłanego KOSIARKA-0822 — GET SELECT **nie miał kolumny** BatchNumber (INSERT miał, SELECT nie; „baza oddaje tylko to, o co SELECT pyta" — magazynier pokazuje 6 rzeczy, choć na półce jest 7) → fix: `, BatchNumber` w SELECT + `BatchNumber = Convert.ToString(...) ?? ""` w mapping → po restarcie: `"KOSIARKA-0822"` ✅
+- User: „w życiu bym nie wymyślił, że to błąd" — debug przez dane, nie kompilator
+
+### Metody HTTP (powtórka — user: „nie pamiętam tych post i t.d.")
+- GET = opcja 2 (wyświetl) / POST = opcja 1 (dodaj) / PUT = opcja 3 (edytuj) / DELETE = opcja 4 (usuń) — kotwica konsoli (kolejna odbudowa)
+- User: „backend to dobre wypluwanie JSON" → tak, i to jego cała robota; JSON = wspólny język kuchnia↔sala; talerz = strona (następny krok)
+
+### Utrwalone (ważne!)
+- **404 na korzeniu** (`http://localhost:5109/`) = normalne (centrala vs numer wewnętrzny) — API odpowiada tylko pod `/api/...`
+- **Serwer nie działa = terminal z `dotnet run` zamknięty** (proces umiera z oknem) — zostaw okno otwarte!
+- Adres z logu „Now listening on"; po zmianach kodu: Ctrl+C → `dotnet run`
+
+### Następna sesja (Dzień 14)
+1. PUT/DELETE dla partii (edycja/usuwanie) — piosenka znana z PrzedmiotyController
+2. Albo: PZ/WZ w konsoli (opcja 6/7) — silnik FIFO
+3. Potem strona: partie na talerzu (tabela jak dla przedmiotów)
  
