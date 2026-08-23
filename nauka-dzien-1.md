@@ -729,4 +729,45 @@ Zatrzymany API → klik Dodaj: nic się nie zapisuje; F5: czerwona strona błęd
 ### Następna sesja (Dzień 15)
 1. **Strona MagazynWeb — partie na talerzu**: tabela z partiami + formularz dodawania (wzorzec znany z przedmiotów)
 2. Albo: PZ/WZ w konsoli (opcja 6/7)
+
+---
+
+# Dzień 15 (2026-08-23) — Strona: partie na talerzu ✅ (MagazynWeb)
+
+## Co powstało
+
+- **Naprawa portu w Home.razor:** `localhost:5000` → `5109` (7 miejsc, **Ctrl+H „Zamień wszystko"** — skrót przyjęty entuzjastycznie 😄). Strona szukała API pod starym adresem: kiedyś API startowało ręcznie z `--urls 5000`, teraz zwykły `dotnet run` → 5109. Przez to Home.razor od jakiegoś czasu nie działał!
+- **Nowa strona `Batches.razor`** (adres `/partie`): formularz (6 pól) + przycisk Dodaj/Zapisz (karteczka `edytowanyId`) + tabela + `@code` (OnInitializedAsync GET, Dodaj POST/PUT, Usun DELETE, Edytuj) — cały wzorzec Home.razor przeniesiony na partie (user pisał nagłówek i formularz sam; resztę dokończył asystent, user zmęczony)
+- **Model `Batch.cs` w MagazynWeb** — kopia z API (JSON musi mieć TEN SAM „przepis" po obu stronach: nazwy pól muszą się zgadzać)
+- **Link „Partie" w menu** (NavMenu.razor)
+- **Test na żywo:** user dodał partię TEST-STRONA ze strony (widać ją w bazie przez API) — POST z przeglądarki działa!
+
+## NOWY KONCEPT: JOIN — sklejanie tabel (user: „tabelka jest źle zrobiona, artykuł powinien mieć partie")
+
+- Partia trzyma tylko **numer** artykułu (`PrzedmiotId`); NAZWA („Kosiarka") leży w tabeli `Przedmioty` — celowo (nazwa nie jest kopiowana do każdej partii; zmiana nazwy = zmiana w jednym miejscu)
+- **JOIN** w GET:
+  `SELECT Partie.Id, ..., Przedmioty.Nazwa ... FROM Partie JOIN Przedmioty ON Partie.PrzedmiotId = Przedmioty.Id`
+- `ON` = „sklej po tym: numer w partii = numer w tabeli przedmiotów"
+- `Partie.` przed kolumnami = **która tabela** ma tę kolumnę — ważne, bo obie tabele mają `Id`!
+- Pole `Nazwa` dodane do modelu Batch (API + Web) + kolumna na stronie (wyświetla `@partia.Nazwa`)
+- **Etykiety UI:** „Przedmiot" → „Artykuł" (preferencja usera; nazwy w bazie i w kodzie zostają polskie — wewnętrzny detal)
+
+## Lekcje dnia (zarządzanie serwerami)
+
+- **Błąd 500 na stronie = API nie działa** („nikt nie odbiera" — SocketException connection refused na localhost:5109). Kod strony OK, padł backend
+- **„Nie ma zmian" na stronie = stary proces trzyma port.** `dotnet run` nie wystartuje, jeśli port zajęty → przeglądarka rozmawia ze starą wersją. Diagnoza: `netstat -ano | findstr :5008` → `taskkill /PID <pid> /F` → `dotnet run` od nowa
+- **Weryfikacja, że strona renderuje dane:** `curl.exe -s http://localhost:5008/partie | findstr Kosiarka` — jeśli serwer zwraca dane, a Ty nie widzisz zmian → **Ctrl+F5** (przeglądarka trzyma starą zakładkę w pamięci)
+- Porządek startu: **API najpierw, strona potem** (strona ładuje dane przy otwarciu — bez API pokaże błąd)
+
+## Stan na koniec dnia
+
+- ✅ Strona `/partie`: tabela partii z **nazwami artykułów** (JOIN), dodawanie/edycja/usuwanie z przeglądarki
+- ✅ Home.razor znów działa (port 5109)
+- ⏹️ Home.razor: etykieta „Przedmiot" → „Artykuł" (ujednolicenie)
+- ⏹️ PZ/WZ w konsoli (opcja 6/7 FIFO)
+
+## Następna sesja (Dzień 16)
+
+1. **PZ/WZ w konsoli** (opcja 6/7, silnik FIFO — partie już czekają w bazie)
+2. Albo: dalsze ulepszenia strony partii (np. etykiety, suma wartości partii)
  

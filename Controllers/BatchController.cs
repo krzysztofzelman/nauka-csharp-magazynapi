@@ -22,7 +22,9 @@ public class BatchController : ControllerBase
         {
             connection.Open();
             SqliteCommand command = connection.CreateCommand();
-            command.CommandText = "SELECT Id, PrzedmiotId, Ilosc, Cena, Data, Status, BatchNumber FROM Partie";
+            command.CommandText = "SELECT Partie.Id, Partie.PrzedmiotId, Przedmioty.Nazwa, Partie.Ilosc," +
+                " Partie.Cena, Partie.Data, Partie.Status, Partie.BatchNumber FROM Partie JOIN Przedmioty" +
+                " ON Partie.PrzedmiotId = Przedmioty.Id";
             SqliteDataReader reader = command.ExecuteReader();
             while (reader.Read())
             {
@@ -30,6 +32,7 @@ public class BatchController : ControllerBase
                 {
                     Id = Convert.ToInt32(reader["Id"]),
                     PrzedmiotId = Convert.ToInt32(reader["PrzedmiotId"]),
+                    Nazwa = Convert.ToString(reader["Nazwa"]) ?? "",
                     Ilosc = Convert.ToInt32(reader["Ilosc"]),
                     Cena = Convert.ToDecimal(reader["Cena"]),
                     Data = Convert.ToString(reader["Data"]),
