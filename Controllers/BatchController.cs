@@ -41,7 +41,7 @@ public class BatchController : ControllerBase
         return lista;
     }
     [HttpPost]
-    public void AddBatch(Batch nowy)
+    public void AddBatch(Batch batch)
     {
         string connectionString = _configuration.GetConnectionString("MagazynDb");
         using (SqliteConnection connection = new SqliteConnection(connectionString))
@@ -50,12 +50,44 @@ public class BatchController : ControllerBase
             SqliteCommand command = connection.CreateCommand();
             command.CommandText = "INSERT INTO Partie (PrzedmiotId, Ilosc, Cena, Data, Status, BatchNumber)" +
                 " VALUES (@PrzedmiotId, @Ilosc, @Cena, @Data, @Status, @BatchNumber)";
-            command.Parameters.AddWithValue("@PrzedmiotId", nowy.PrzedmiotId);
-            command.Parameters.AddWithValue("@Ilosc", nowy.Ilosc);
-            command.Parameters.AddWithValue("@Cena", nowy.Cena);
-            command.Parameters.AddWithValue("@Data", nowy.Data);
-            command.Parameters.AddWithValue("@Status", nowy.Status);
-            command.Parameters.AddWithValue("@BatchNumber", nowy.BatchNumber);
+            command.Parameters.AddWithValue("@PrzedmiotId", batch.PrzedmiotId);
+            command.Parameters.AddWithValue("@Ilosc", batch.Ilosc);
+            command.Parameters.AddWithValue("@Cena", batch.Cena);
+            command.Parameters.AddWithValue("@Data", batch.Data);
+            command.Parameters.AddWithValue("@Status", batch.Status);
+            command.Parameters.AddWithValue("@BatchNumber", batch.BatchNumber);
+            command.ExecuteNonQuery();
+        }
+    }
+    [HttpPut("{id}")]
+    public void UpdateBatch(int id, Batch batch)
+    {
+        string connectionString = _configuration.GetConnectionString("MagazynDb");
+        using (SqliteConnection connection = new SqliteConnection(connectionString))
+        {
+            connection.Open();
+            SqliteCommand command = connection.CreateCommand();
+            command.CommandText = "UPDATE Partie SET PrzedmiotId=@PrzedmiotId, Ilosc=@Ilosc, Cena=@Cena, Data=@Data, Status=@Status, BatchNumber=@BatchNumber WHERE Id=@Id";
+            command.Parameters.AddWithValue("@Id", id);
+            command.Parameters.AddWithValue("@PrzedmiotId", batch.PrzedmiotId);
+            command.Parameters.AddWithValue("@Ilosc", batch.Ilosc);
+            command.Parameters.AddWithValue("@Cena", batch.Cena);
+            command.Parameters.AddWithValue("@Data", batch.Data);
+            command.Parameters.AddWithValue("@Status", batch.Status);
+            command.Parameters.AddWithValue("@BatchNumber", batch.BatchNumber);
+            command.ExecuteNonQuery();
+        }
+    }
+    [HttpDelete("{id}")]
+    public void DeleteBatch(int id)
+    {
+        string connectionString = _configuration.GetConnectionString("MagazynDb");
+        using (SqliteConnection connection = new SqliteConnection(connectionString))
+        {
+            connection.Open();
+            SqliteCommand command = connection.CreateCommand();
+            command.CommandText = "DELETE FROM Partie WHERE Id=@Id";
+            command.Parameters.AddWithValue("@Id", id);
             command.ExecuteNonQuery();
         }
     }

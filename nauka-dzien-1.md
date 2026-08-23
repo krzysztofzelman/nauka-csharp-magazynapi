@@ -687,4 +687,46 @@ Zatrzymany API → klik Dodaj: nic się nie zapisuje; F5: czerwona strona błęd
 1. PUT/DELETE dla partii (edycja/usuwanie) — piosenka znana z PrzedmiotyController
 2. Albo: PZ/WZ w konsoli (opcja 6/7) — silnik FIFO
 3. Potem strona: partie na talerzu (tabela jak dla przedmiotów)
+
+---
+
+## Dzień 14 (2026-08-23) — CRUD partii KOMPLETNY ✅ (PUT + DELETE, cały BatchController działa)
+
+### PUT — `UpdateBatch(int id, Batch batch)` (edycja = opcja 3 z konsoli)
+- **Nowość w stosunku do GET/POST:** `{id}` w adresie — `[HttpPut("{id}")]` = „w adresie będzie numer partii"; PUT/DELETE muszą wiedzieć **KTÓRĄ** partię zmienić (jak w konsoli: wpisujesz numer przed edycją)
+- Nagłówek dany przez asystenta; **CIAŁO user napisał SAM** (UPDATE + 7× AddWithValue + ExecuteNonQuery) — piosenka siedzi! 🎵
+- **Błąd złapany:** `[HttpPut("[id}")]` — `[` zamiast `{` (wtedy adres = dosłownie `api/Batch/[id}` i framework nie wyłapuje numeru)
+
+### Rename `nowy` → `batch` (pytanie usera: „nowy nie lepiej zmienić na new?")
+- **`new` = słowo zastrzeżone w C#** (już znaczy „stwórz obiekt": `new Batch`, `new SqliteConnection`) — zmienna o tej nazwie = błąd kompilacji (jak nazwanie zmiennej `if`)
+- Instynkt słuszny (kod ma być po angielsku) → wybrane **`batch`**; zmiana w POST i PUT (spójność — jedna rzecz, jedno imię); VS rename Ctrl+R, R
+
+### DELETE — `DeleteBatch(int id)` (usuwanie = opcja 4 z konsoli)
+- **User napisał CAŁY sam** (nagłówek + ciało) — najkrótsza piosenka: `DELETE FROM Partie WHERE Id=@Id` + 1× AddWithValue
+- User: „za mało tego command jest" → **to POPRAWNE!** Do kasowania nie podajesz żadnych danych — tylko numer partii (PUT miał 6 pól `@`, DELETE ma 1 `@Id`). Zauważenie różnicy = czucie piosenki
+
+### Test na żywo (curl, PS 5.1) — CRUD KOMPLETNY ✅
+| Akcja | Adres | Test |
+|---|---|---|
+| GET | `http://localhost:5109/api/Batch` | ✅ KOSIARKA-0822 |
+| POST | `api/Batch` + body.json | ✅ TEST-0823 dodana |
+| PUT | `api/Batch/1` + body.json | ✅ cena 540→550 |
+| DELETE | `api/Batch/2` | ✅ TEST-0823 zniknęła |
+
+### Lekcje PowerShell/curl (ważne, utrwalone!)
+- **JSON w `-d '{...}'` NIE działa** — PS 5.1 psuje cudzysłowy przy przekazywaniu do curl.exe → API 400 `'p' is an invalid start of a property name`
+- **Wzorzec:** `Set-Content -Path body.json -Value '{...}'` + `curl.exe -X POST ... -d '@body.json'` (curl czyta ciało z pliku)
+- **`@` w PS = operator splatting** → gołe `-d @body.json` = błąd `SplattingNotPermitted`; cudzysłów `'@body.json'` = zwykły tekst dla PS
+- Spacja w `' @body.json'` NIE przeszkadza (curl ją ignoruje — empirycznie), ale piszemy bez
+- **GET** testuje się w przeglądarce (pełny adres); **PUT/POST/DELETE** curl-em; przeglądarka robi tylko GET → adres z `{id}` w przeglądarce = 404 (normalne)
+
+### Stan na koniec dnia
+- ✅ BatchController: **GET + POST + PUT + DELETE** = cały CRUD partii przez HTTP (to samo co konsola opcje 1-4)
+- ✅ Kod po angielsku (`batch` zamiast `nowy`)
+- ⏹️ PZ/WZ w konsoli (opcja 6/7) — silnik FIFO
+- ⏹️ Strona: partie na talerzu (MagazynWeb)
+
+### Następna sesja (Dzień 15)
+1. **Strona MagazynWeb — partie na talerzu**: tabela z partiami + formularz dodawania (wzorzec znany z przedmiotów)
+2. Albo: PZ/WZ w konsoli (opcja 6/7)
  
